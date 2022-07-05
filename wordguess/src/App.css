@@ -1,0 +1,12 @@
+.box {
+  width: 2em;
+  height: 2em;
+  display: inline-block;
+  margin: 3px;
+  background-color: grey;
+  text-align: center;
+  text-decoration: dashed;
+}
+.row {
+  display: flex;
+}
