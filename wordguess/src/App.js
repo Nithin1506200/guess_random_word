@@ -3,11 +3,13 @@ import "./App.css";
 import Row from "./row";
 const link = "https://random-word-api.herokuapp.com/word";
 function App() {
+  // actual guess word fetched by api
   const [guessWord, setGuessWord] = useState("hellowj");
-  const [current, setCurrent] = useState(0);
+  // current correct guess word
+  const [current, setCurrent] = useState(" ");
+  // current typing word
   const [typeWord, setTypeword] = useState("");
-  // initial setup
-  const [length, setLength] = useState([]);
+  // NOTE: determine win
   const [win, setWin] = useState(false);
   useEffect(() => {
     window.addEventListener("keyup", handle);
@@ -16,21 +18,31 @@ function App() {
         (event.keyCode >= 65 && event.keyCode <= 90) ||
         (event.keyCode >= 97 && event.keyCode <= 122)
       ) {
-        if (typeWord.length < guessWord[0].length) {
+        if (typeWord.length <= guessWord[0].length) {
           setTypeword((typeword) => {
             typeword = typeword.concat(event.key);
+            if (event.key === guessWord[0][typeword.length - 1]) {
+              setCurrent((e, len = typeword.length - 1) => {
+                let empty = "";
+                for (let i = 0; i < guessWord[0].length; i++) {
+                  if (i === len) {
+                    empty += event.key;
+                  } else {
+                    empty += e[i];
+                  }
+                }
 
+                return empty;
+              });
+            }
             if (typeword === guessWord[0]) {
               setWin(true);
+              return typeword;
             }
             if (typeword.length === guessWord[0].length) {
-              setLength((e) => {
-                e[current] = typeword;
-                return e;
-              });
-              setTypeword("");
-              setCurrent((e) => e + 1);
+              typeword = "";
             }
+
             return typeword;
           });
         }
@@ -41,23 +53,19 @@ function App() {
     return () => {
       window.removeEventListener("keyup", handle);
     };
-  }, [guessWord, current, length, typeWord]);
+  }, [guessWord, current, typeWord]);
   useEffect(() => {
     fetch(link)
       .then((resopnse) => resopnse.json())
       .then((data) => {
         setGuessWord(data);
-        const rows = [];
-        for (let i = 0; i < data[0].length; i++) {
-          rows.push("");
-        }
-        setLength(rows);
-        setCurrent(0);
+        const empty = " ";
+
+        setCurrent(empty.repeat(data[0].length));
         setTypeword("");
       });
     return () => {
       setCurrent("");
-      setLength([]);
       setTypeword("");
       setWin(false);
     };
@@ -67,15 +75,8 @@ function App() {
     <div className="App">
       <div>Hellow world {guessWord}</div>
       {win ? <h1 style={{ color: "green" }}>congrats! You won👍🎉✔</h1> : ""}
-      {length.map((value, i) => {
-        return (
-          <Row
-            key={i}
-            guess={guessWord}
-            current={i === current ? typeWord : length[i]}
-          />
-        );
-      })}
+      <Row guess={guessWord} current={current} />
+      <Row guess={guessWord} current={typeWord} />
     </div>
   );
 }
